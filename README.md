@@ -10,6 +10,9 @@ When loading a prx/elf into Ghidra be sure to select the following language (By 
 PowerPC:BE:64:A2ALT-32addr:default
 ```
 
+## Possible problems
+Some cell specific instructions are currently not supported in ghidra, these are the vector store/get lvlx etc, these appear in games and may break decompilation currently.
+
 ## AnalyzePs3Binary.java
 The main script, this should be used BEFORE analysis is run on the program.
 
