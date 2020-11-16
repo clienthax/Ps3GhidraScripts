@@ -84,7 +84,7 @@ which also has libent and libstub pointers
             return -1;
         }
 
-        return getDataAt(elfHeader.getStart()).getComponent(8).getShort(0);//e_type
+        return getDataAt(elfHeader.getStart()).getComponent(6).getShort(0);//e_type
     }
 
 
@@ -106,7 +106,7 @@ which also has libent and libstub pointers
         } else if(loadingExec()) {
             println("exec");
 
-            final long elf_entry = getDataAt(elfHeader.getStart()).getComponent(11).getLong(0); // e_entry
+            final long elf_entry = getDataAt(elfHeader.getStart()).getComponent(9).getLong(0);
             final Address tocPtrAddress = currentAddress.getNewAddress(elf_entry + 4);
             applyDataForce(Pointer32DataType.dataType, "tocPtr", tocPtrAddress);
             applyDataForce(Pointer32DataType.dataType, "_start", tocPtrAddress.add(-4));
