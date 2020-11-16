@@ -14,10 +14,21 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.math.BigInteger;
+import java.lang.Comparable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Collections;
+
+class ElfSection implements Comparable<ElfSection> {
+    public long vAddr = 0;
+    public long size = 0;
+
+    public int compareTo(ElfSection compareElfSection) {
+        return (int)(this.vAddr - compareElfSection.vAddr);
+    }
+}
 
 @SuppressWarnings("Duplicates")
 public class AnalyzePs3Binary extends GhidraScript {
@@ -25,7 +36,7 @@ public class AnalyzePs3Binary extends GhidraScript {
 
     private static final String NIDS_PATH = "nids.txt";
 
-    private List<Address> funcStarts = new ArrayList<>();
+    private List<ElfSection> sections = new ArrayList<>();
 
     private final static long PT_PROC_PARAM = 0x60000001;
     private final static long PT_PROC_PRX   = 0x60000002;
@@ -37,7 +48,6 @@ public class AnalyzePs3Binary extends GhidraScript {
     private final static short ET_CORE = 4;
 
     private final static short ET_SCE_PPURELEXEC = (short) 0xffa4;
-
 
 
     /*
@@ -61,7 +71,6 @@ which also has libent and libstub pointers
         createStructureTypes();
 
         process();//New method
-
 
         //TODO find opd and create functions
         //TOOD make sexy
@@ -87,7 +96,6 @@ which also has libent and libstub pointers
         return getDataAt(elfHeader.getStart()).getComponent(8).getShort(0);//e_type
     }
 
-
     boolean loadingExec() throws Exception {
         return getType() == ET_EXEC;
     }
@@ -97,7 +105,6 @@ which also has libent and libstub pointers
     }
 
     private void process() throws Exception {
-
         if(loadingPrx()) {
             println("prx");
 
@@ -106,23 +113,90 @@ which also has libent and libstub pointers
         } else if(loadingExec()) {
             println("exec");
 
-            final long elf_entry = getDataAt(elfHeader.getStart()).getComponent(11).getLong(0); // e_entry
-            final Address tocPtrAddress = currentAddress.getNewAddress(elf_entry + 4);
-            applyDataForce(Pointer32DataType.dataType, "tocPtr", tocPtrAddress);
-            applyDataForce(Pointer32DataType.dataType, "_start", tocPtrAddress.add(-4));
-            final int toc = (int) getDataAt(tocPtrAddress).getAddress(0).getOffset();//May be defined, may not be too
-            applyProcessInfo();
-            setR2(toc);
+            final Data elfData = getDataAt(elfHeader.getStart());
+            final long elfEntry = elfData.getComponent(11).getLong(0); // e_entry
+            printf("e_entry: %X\n", elfEntry);
 
+            Address opdAddress = currentAddress.getNewAddress(0);
+            long opdSize = 0;
+            boolean foundOpd = false;
+
+            parseSections(elfData);
+
+            for (int i = 1; i < sections.size(); ++i) {
+                if (elfEntry < sections.get(i).vAddr) {
+                    final ElfSection opdSection = sections.get(i - 1);
+                    opdAddress = currentAddress.getNewAddress(opdSection.vAddr);
+                    opdSize = opdSection.size;
+
+                    foundOpd = true;
+                    break;
+                }
+            }
+            if (!foundOpd) {
+                println("Could not find OPD");
+            }
+
+            printf("OPD: %X\n", opdAddress.getOffset());
+
+            final Address firstTocBaseAddr = opdAddress.add(4);
+
+            applyDataForce(Pointer32DataType.dataType, "tocPtr", opdAddress);
+            applyDataForce(Pointer32DataType.dataType, "tocBase0", firstTocBaseAddr);
+
+            applyDataForce(Pointer32DataType.dataType, "_start", currentAddress.getNewAddress(elfEntry));
+
+            final int tocBase = (int) getDataAt(firstTocBaseAddr).getAddress(0).getOffset();
+            printf("TOC: %X\n", tocBase);
+
+            applyProcessInfo();
+
+            if (foundOpd) {
+                parseOpd(opdAddress, opdSize);
+            }
+            setR2(tocBase);
         } else {
             println("What the heck did you try and load!?");
         }
-
     }
 
+    private void parseSections(Data elfData) throws Exception {
+//        final long sectionOffset  = elfData.getComponent(13).getLong(0); // e_shoff
+//        printf("e_shoff: 0x%X\n", sectionOffset);
+        final int sectionCount = elfData.getComponent(19).getShort(0); // e_shnum
+        printf("e_shnum: 0x%X\n", sectionCount);
+        final int sectionSize = elfData.getComponent(18).getShort(0); // e_shentsize
+        printf("e_shentsize: 0x%X\n", sectionSize);
+
+        Address sectHdrAddr = currentAddress.getNewAddress(0);
+        for (MemoryBlock block : currentProgram.getMemory().getBlocks()) {
+            println(block.getName());
+
+            if (block.getName().equals("_elfSectionHeaders")) {
+                sectHdrAddr = block.getStart();
+                break;
+            }
+        }
+
+        final Data sectHdr = getDataAt(sectHdrAddr);
+
+        for (int shIdx = 0; shIdx < sectionCount; ++shIdx) {
+            final Data shData = sectHdr.getComponent(shIdx);
+
+            final long shAddr = shData.getComponent(3).getLong(0);
+            final long shSize = shData.getComponent(5).getLong(0);
+
+            ElfSection newSection = new ElfSection();
+            newSection.vAddr = shAddr;
+            newSection.size = shSize;
+            sections.add(newSection);
+
+            printf("section: addr=0x%X size=0x%X\n", shAddr, shSize);
+        }
+    }
+
+
     private void applyProcessInfo() throws Exception {//https://github.com/aerosoul94/ida_gel/blob/master/src/ps3/cell_loader.cpp#L669
-
-
         final Address add = elfHeader.getStart().add(64);
         final Data phdr_array = getDataAt(add);//Lazy way to skip to the phdrs
         println(phdr_array.getDataType()+"");
@@ -169,11 +243,48 @@ which also has libent and libstub pointers
             println();
         }
 
-
+        Collections.sort(sections);
     }
 
-    private void loadOPD() {
+    private void addFunction(Address funcStart) {
+        if (!disassemble(funcStart)) {
+            printf("failed to disasm at %X\n", funcStart.getOffset());
+            return;
+        }
+        if (getFunctionAt(funcStart) == null) {
+            if (createFunction(funcStart, null) == null) {
+                printf("failed to create func at %X\n", funcStart.getOffset());
+            }
+        }
+    }
 
+    private void parseOpd(Address opdAddr, long opdSize) {
+        Address addr = opdAddr;
+
+        for (long i = 0; i < opdSize; i += 8) {
+            final Address funcAddressPtr = opdAddr.add(i);
+            Address funcAddress = currentAddress.getNewAddress(0);
+
+            try {
+                Data data = this.createData(funcAddressPtr, Pointer32DataType.dataType);
+                if (data != null) {
+                    funcAddress = (Address)data.getValue();
+                    addFunction(funcAddress);
+                }
+            } catch (Exception e) {
+                 printf("Error creating data at %X\n", funcAddress.getOffset());
+            }
+
+            final Address funcTocAddress = opdAddr.add(i + 4);
+
+            if (getDataAt(funcTocAddress) == null) {
+                try {
+                      this.createData(funcTocAddress, Pointer32DataType.dataType);
+                } catch (Exception e) {
+                     printf("Error creating data at %X\n", funcTocAddress.getOffset());
+                }
+            }
+        }
     }
 
     private void findExports() throws Exception {
@@ -648,14 +759,6 @@ which also has libent and libstub pointers
         }
 
 
-    }
-
-    private void createMissedFunctions() {
-        for (Address funcStart : funcStarts) {
-            if(getFunctionAt(funcStart) == null) {
-                createFunction(funcStart, null);
-            }
-        }
     }
 
     public static <T extends Plugin> T getPlugin(PluginTool tool, Class<T> c) {
