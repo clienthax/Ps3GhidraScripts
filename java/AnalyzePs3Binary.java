@@ -272,36 +272,18 @@ which also has libent and libstub pointers
         }
     }
 
-    private void parseOpd(Address opdAddr, long opdSize) {
+    private void parseOpd(Address opdAddr, long opdSize) throws Exception {
         Address addr = opdAddr;
 
         for (long i = 0; i < opdSize; i += 8) {
             final Address funcAddressPtr = opdAddr.add(i);
-            Address funcAddress = currentAddress.getNewAddress(0);
-
-            if (funcAddress.getOffset() == 0) {
-            	continue;
-            }
-
-            try {
-                Data data = this.createData(funcAddressPtr, Pointer32DataType.dataType);
-                if (data != null) {
-                    funcAddress = (Address) data.getValue();
-                    addFunction(funcAddress);
-                }
-            } catch (Exception e) {
-                printf("Error creating data at %X\n", funcAddress.getOffset());
-            }
+            applyDataForce(Pointer32DataType.dataType, "", funcAddressPtr);
+            Data data = getDataAt(funcAddressPtr);
+            Address funcAddress = (Address) data.getValue();
+            addFunction(funcAddress);
 
             final Address funcTocAddress = opdAddr.add(i + 4);
-
-            if (getDataAt(funcTocAddress) == null) {
-                try {
-                    this.createData(funcTocAddress, Pointer32DataType.dataType);
-                } catch (Exception e) {
-                    printf("Error creating data at %X\n", funcTocAddress.getOffset());
-                }
-            }
+            applyDataForce(Pointer32DataType.dataType, "", funcTocAddress);
         }
     }
 
@@ -975,7 +957,9 @@ which also has libent and libstub pointers
     private void applyDataForce(DataType data, String name, Address address) throws Exception {
         clearListing(address, address.add((data.getLength())-1));
         createData(address, data);
-        createLabel(address, name, true);
+        if (!name.isEmpty()) {
+        	createLabel(address, name, true);
+        }
     }
 
 
