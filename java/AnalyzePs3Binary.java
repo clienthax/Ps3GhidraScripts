@@ -86,11 +86,27 @@ which also has libent and libstub pointers
         }
 
         if(elfHeader == null) {
-            printerr("Well.. this shouldn't happen :|\n");
+            printerr("Couldn't find Elf64_Ehdr\n");
             return -1;
         }
 
         return getDataAt(elfHeader.getStart()).getComponent(8).getShort(0);//e_type
+    }
+
+    private Address getPhdrArrayAddress() throws Exception {
+        for(long i = elfHeader.getStart().getOffset(); i < elfHeader.getEnd().getOffset(); i++) {
+            Address addr = elfHeader.getStart().getNewAddress(i);
+            final Data dataAt = getDataAt(addr);
+            if (dataAt != null) {
+                println(""+dataAt.getDataType().getName());
+            }
+            if(dataAt != null && dataAt.getDataType().getName().startsWith("Elf64_Phdr")) {
+                return addr;
+            }
+        }
+
+        printerr("Couldn't find Elf64_Phdr[]\n");
+        return null;
     }
 
     boolean loadingExec() throws Exception {
@@ -200,8 +216,9 @@ which also has libent and libstub pointers
     }
 
     private void applyProcessInfo() throws Exception {// https://github.com/aerosoul94/ida_gel/blob/master/src/ps3/cell_loader.cpp#L669
-        final Address add = elfHeader.getStart().add(64);
-        final Data phdr_array = getDataAt(add);//Lazy way to skip to the phdrs
+        final Address phdrArrayAddress = getPhdrArrayAddress();
+        println("Reading PHDR array at "+phdrArrayAddress);
+        final Data phdr_array = getDataAt(phdrArrayAddress);
         println(phdr_array.getDataType()+"");
 
         for (int i = 0; i < phdr_array.getNumComponents(); i++) {
