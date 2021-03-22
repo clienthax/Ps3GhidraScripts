@@ -25,6 +25,7 @@ import ghidra.app.util.MemoryBlockUtils;
 import ghidra.app.util.opinion.ElfLoader;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.address.AddressSet;
+import ghidra.program.model.address.AddressSetView;
 import ghidra.program.model.address.AddressSpace;
 import ghidra.program.model.data.DataTypeManager;
 import ghidra.program.model.lang.Register;
@@ -54,38 +55,35 @@ import java.util.function.Predicate;
 
 public class DefinePS3Syscalls extends GhidraScript {
 
-    //disassembles to "CALL dword ptr GS:[0x10]"
-    private static final byte[] ppc64_bytes = { 0x44, 0x00, 0x00, 0x02 };
+    // disassembles to "CALL dword ptr GS:[0x10]"
+    private static final byte[] ppc64_bytes = {0x44, 0x00, 0x00, 0x02};
 
     private static final String powerPC = "PowerPC";
 
     private static final String SYSCALL_SPACE_NAME = "SYSCALLS";
 
-    private static final int SYSCALL_SPACE_LENGTH = 1024;//0x10000
+    private static final int SYSCALL_SPACE_LENGTH = 1024; // 0x10000
 
-    //this is the name of the userop (aka CALLOTHER) in the pcode translation of the
-    //native "syscall" instruction
-    private static final String SYSCALL_X64_CALLOTHER = "syscall";
-
-    //tests whether an instruction is making a system call
+    // tests whether an instruction is making a system call
     private Predicate<Instruction> tester;
 
-    //register holding the syscall number
+    // register holding the syscall number
     private String syscallRegister;
 
-    //datatype archive containing signature of system calls
-    private String datatypeArchiveName;
-
-    //file containing map from syscall numbers to syscall names
-    //note that different architectures can have different system call numbers, even
-    //if they're both Linux...
-    private String syscallFileName;
-
-    //the type of overriding reference to apply
-    private RefType overrideType;
-
-    //the calling convention to use for system calls (must be defined in the appropriate .cspec file)
-    private String callingConvention;
+    /**
+     * Checks whether an instruction is a system call
+     *
+     * @param inst instruction to check
+     * @return true precisely when the instruction is a system call
+     */
+    private static boolean checkInstruction(Instruction inst) {
+        try {
+            return Arrays.equals(ppc64_bytes, inst.getBytes());
+        } catch (MemoryAccessException e) {
+            Msg.info(DefinePS3Syscalls.class, "MemoryAccessException at " + inst.getAddress().toString());
+            return false;
+        }
+    }
 
     @Override
     protected void run() throws Exception {
@@ -98,17 +96,23 @@ public class DefinePS3Syscalls extends GhidraScript {
 
         final Address syscallTableAddr = currentProgram.getAddressFactory().getAddress("0x8000000");
         MemoryBlock syscallBlock = currentProgram.getMemory().getBlock(SYSCALL_SPACE_NAME);
-        if(syscallBlock == null) {
+        if (syscallBlock == null) {
             syscallBlock = MemoryBlockUtils.createUninitializedBlock(currentProgram, false, SYSCALL_SPACE_NAME, syscallTableAddr, SYSCALL_SPACE_LENGTH, "PS3 Syscalls", null, true, true, true, null);
         }
 
         //determine whether the executable is 32 or 64 bit and set fields appropriately
         tester = DefinePS3Syscalls::checkInstruction;
         syscallRegister = "r11";
-        datatypeArchiveName = "generic_clib";
-        syscallFileName = "ps3_syscall_numbers";
-        overrideType = RefType.CALLOTHER_OVERRIDE_CALL;
-        callingConvention = "__stdcall";//syscall type not supported :|
+        // datatype archive containing signature of system calls
+        String datatypeArchiveName = "generic_clib";
+        // file containing map from syscall numbers to syscall names
+        // note that different architectures can have different system call numbers, even
+        // if they're both Linux...
+        String syscallFileName = "ps3_syscall_numbers";
+        // the type of overriding reference to apply
+        RefType overrideType = RefType.CALLOTHER_OVERRIDE_CALL;
+        // the calling convention to use for system calls (must be defined in the appropriate .cspec file)
+        String callingConvention = "__stdcall";//syscall type not supported :|
 
         //get the space where the system calls live.
         //If it doesn't exist, create it.
@@ -127,8 +131,7 @@ public class DefinePS3Syscalls extends GhidraScript {
         //get the system call number at each callsite of a system call.
         //note that this is not guaranteed to succeed at a given system call call site -
         //it might be hard (or impossible) to determine a specific constant
-        Map<Address, Long> addressesToSyscalls =
-                resolveConstants(funcsToCalls, currentProgram, monitor);
+        Map<Address, Long> addressesToSyscalls = resolveConstants(funcsToCalls, currentProgram, monitor);
 
         if (addressesToSyscalls.isEmpty()) {
             popup("Couldn't resolve any syscall constants");
@@ -140,7 +143,7 @@ public class DefinePS3Syscalls extends GhidraScript {
         Map<Long, String> syscallNumbersToNames = getSyscallNumberMap();
 
         for (long i = 1; i < 990; i++) {
-            if(syscallNumbersToNames.get(i) == null) {
+            if (syscallNumbersToNames.get(i) == null) {
                 //println("Missing mapping for syscall "+i);
             }
 
@@ -164,13 +167,13 @@ public class DefinePS3Syscalls extends GhidraScript {
                 //printf("meh\n");
                 //printf("meh %s\n", funcName);
 
-                if(funcName.startsWith("syscall_")) {
-                    println("Couldnt find mapping for "+funcName);
+                if (funcName.startsWith("syscall_")) {
+                    println("Couldnt find mapping for " + funcName);
                 }
 
-                callee = createFunction(callTarget, "syscall_"+funcName);
-                if(callee == null) {
-                    printf("Something went wrong up at "+callSite+" syscall "+callTarget+" \n");
+                callee = createFunction(callTarget, "syscall_" + funcName);
+                if (callee == null) {
+                    printf("Something went wrong up at " + callSite + " syscall " + callTarget + " \n");
                     continue;
                 }
                 callee.setCallingConvention(callingConvention);
@@ -197,20 +200,14 @@ public class DefinePS3Syscalls extends GhidraScript {
         ApplyFunctionDataTypesCmd cmd = new ApplyFunctionDataTypesCmd(dataTypeManagers,
                 new AddressSet(syscallSpace.getMinAddress(), syscallSpace.getMaxAddress()),
                 SourceType.USER_DEFINED, false, false);
-            cmd.applyTo(currentProgram);
+        cmd.applyTo(currentProgram);
 
     }
 
-    //TODO: better error checking!
+    // TODO: better error checking!
     private Map<Long, String> getSyscallNumberMap() {
         Map<Long, String> syscallMap = new HashMap<>();
-        /*ResourceFile rFile = Application.findDataFileInAnyModule(syscallFileName);
-        if (rFile == null) {
-            popup("Error opening syscall number file, using default names");
-            return syscallMap;
-        }*/
-        //try (FileReader fReader = new FileReader(rFile.getFile(false));
-        File file = new File("syscall.txt");
+        File file = new File(Ps3ElfUtils.getExtensionInstallDataPath("Ps3GhidraScripts"), "data/syscall.txt");
         if (!file.exists()) {
             try {
                 file = askFile("Locate syscall.txt", "Accept");
@@ -219,9 +216,8 @@ public class DefinePS3Syscalls extends GhidraScript {
                 return syscallMap;
             }
         }
-        try (FileReader fReader = new FileReader(file);
-             BufferedReader bReader = new BufferedReader(fReader)) {
-            String line = null;
+        try (FileReader fReader = new FileReader(file); BufferedReader bReader = new BufferedReader(fReader)) {
+            String line;
             while ((line = bReader.readLine()) != null) {
                 //lines starting with # are comments
                 if (!line.startsWith("#")) {
@@ -230,8 +226,7 @@ public class DefinePS3Syscalls extends GhidraScript {
                     syscallMap.put(number, parts[1]);
                 }
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             Msg.showError(this, null, "Error reading syscall map file", e.getMessage(), e);
         }
         return syscallMap;
@@ -241,17 +236,23 @@ public class DefinePS3Syscalls extends GhidraScript {
      * Scans through all of the functions defined in {@code program} and returns
      * a map which takes a function to the set of address in its body which contain
      * system calls
-     * @param program program containing functions
+     *
+     * @param program  program containing functions
      * @param tMonitor monitor
      * @return map function -> addresses in function containing syscalls
      * @throws CancelledException if the user cancels
      */
-    private Map<Function, Set<Address>> getSyscallsInFunctions(Program program,
-                                                               TaskMonitor tMonitor) throws CancelledException {
+    private Map<Function, Set<Address>> getSyscallsInFunctions(Program program, TaskMonitor tMonitor) throws CancelledException {
+
+
         Map<Function, Set<Address>> funcsToCalls = new HashMap<>();
         for (Function func : program.getFunctionManager().getFunctionsNoStubs(true)) {
             tMonitor.checkCanceled();
-            for (Instruction inst : program.getListing().getInstructions(func.getBody(), true)) {
+            AddressSetView functionAddressRange = func.getBody();
+            if (functionAddressRange.getMinAddress().equals(functionAddressRange.getMaxAddress())) {
+                println("Function " + func.getName() + " at " + func.getEntryPoint() + " Doesn't look like its defined correctly :c .. (Try clear flow and repair!)");
+            }
+            for (Instruction inst : program.getListing().getInstructions(functionAddressRange, true)) {
                 if (tester.test(inst)) {
                     Set<Address> callSites = funcsToCalls.get(func);
                     if (callSites == null) {
@@ -270,13 +271,13 @@ public class DefinePS3Syscalls extends GhidraScript {
      * the syscall register at each system call instruction
      *
      * @param funcsToCalls map from functions containing syscalls to address in each function of
-     * the system call
-     * @param program containing the functions
+     *                     the system call
+     * @param program      containing the functions
      * @return map from addresses of system calls to system call numbers
      * @throws CancelledException if the user cancels
      */
-    private Map<Address, Long> resolveConstants(Map<Function, Set<Address>> funcsToCalls,
-                                                Program program, TaskMonitor tMonitor) throws CancelledException {
+    private Map<Address, Long> resolveConstants(Map<Function, Set<Address>> funcsToCalls, Program program, TaskMonitor tMonitor) throws CancelledException {
+        // Sometimes this doesn't find all SC's :|
         Map<Address, Long> addressesToSyscalls = new HashMap<>();
         Register syscallReg = program.getLanguage().getRegister(syscallRegister);
         for (Function func : funcsToCalls.keySet()) {
@@ -296,22 +297,6 @@ public class DefinePS3Syscalls extends GhidraScript {
             }
         }
         return addressesToSyscalls;
-    }
-
-    /**
-     * Checks whether an instruction is a system call
-     * @param inst instruction to check
-     * @return true precisely when the instruction is a system call
-     */
-    private static boolean checkInstruction(Instruction inst) {
-        try {
-            return Arrays.equals(ppc64_bytes, inst.getBytes());
-        }
-        catch (MemoryAccessException e) {
-            Msg.info(DefinePS3Syscalls.class,
-                    "MemoryAccessException at " + inst.getAddress().toString());
-            return false;
-        }
     }
 
 }
