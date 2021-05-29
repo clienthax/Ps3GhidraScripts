@@ -7,7 +7,7 @@ Relocations are not currently supported.
 
 When loading a prx/elf into Ghidra be sure to select the following language (By default this is the one under the automatic selection when the recommended checkbox is disabled)
 ```
-PowerPC:BE:64:A2ALT-32addr:default
+PowerISA-Altivec-64-32addr
 ```
 
 ## Required change
