@@ -33,7 +33,7 @@ jobs:
       - name: setup-ghidra
         uses: er28-0652/setup-ghidra@0.0.4
         with:
-          version: "9.2.2"
+          version: "9.2.4"
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
