@@ -32,11 +32,11 @@ jobs:
         run: |
           gradle
           ls -lah dist/
-      - name: Upload - ${{ matrix.ghidra-version }}
-        uses: actions/upload-artifact@v2
+      - uses: svenstaro/upload-release-action@v1-release
         with:
-          name: ghidra_${{ matrix.ghidra-version }}_Ps3GhidraScripts
-          path: |
-            README.md
-            dist/*.zip
-          if-no-files-found: error
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: dist/*.zip
+          tag: ${{ github.ref }}
+          overwrite: true
+          file_glob: true
+
