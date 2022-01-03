@@ -12,14 +12,14 @@ PowerISA-Altivec-64-32addr
 
 ## Installation
 
-Those scripts are meant to be used as a Ghidra extension.
+These scripts are meant to be used as a Ghidra extension.
 
 Simply grab the .zip in release corresponding to your Ghidra version and install in Ghidra through "File=>Install Extension...".
 
 Make sure the extension is active(there should be a checkmark on the left), scripts should then be accessible in CodeBrowser through "Window=>Script Manager".
 
 ## Required change
-To avoid issues with decompliation the following change is needed in Processors\PowerPC\data\languages\ppc_64_32.cspec
+To avoid issues with decompilation the following change is needed in Processors\PowerPC\data\languages\ppc_64_32.cspec
 
 Add `<register name="r2"/>` to the `<unaffected>` list
 
