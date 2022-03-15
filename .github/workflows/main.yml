@@ -1,38 +1,56 @@
 name: CI
 
-on:
-  push:
-    branches: master
-  pull_request:
-    branches: master
-  release:
-    types: created
-  workflow_dispatch:
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
-  build:
-    name: Build Ghidra extension
-    strategy:
-      fail-fast: false
-      matrix:
-        ghidra-version:
-          - '10.0.4'
-          - '10.0.2'
-          - '10.0'
+  build_extension:
     runs-on: ubuntu-latest
-    container: registry.gitlab.com/torgo/ghidra-container/ghidra-plugin-builder:${{ matrix.ghidra-version }}
+    strategy:
+      matrix:
+        ghidra: ['10.0.4', '10.1.1', '10.1.2']
+
     steps:
-      - name: Clone
-        uses: actions/checkout@v2
-      - name: Compile - ${{ matrix.ghidra-version }}
-        run: |
-          gradle
-          ls -lah dist/
-      - uses: svenstaro/upload-release-action@v1-release
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Get short SHA
+        run: echo "SHORT_SHA=${GITHUB_SHA:0:7}" >> $GITHUB_ENV
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: dist/*.zip
-          tag: ${{ github.ref }}
-          overwrite: true
-          file_glob: true
+          java-version: 11
+          distribution: temurin
+
+      - name: Setup Ghidra
+        uses: er28-0652/setup-ghidra@master
+        with:
+          version: ${{ matrix.ghidra }}
+
+      - name: Build Extension
+        run: gradle
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          path: dist/
+          retention-days: 7
+
+  push_release:
+    if: |
+      github.event_name == 'push' &&
+      github.repository == 'clienthax/Ps3GhidraScripts'
+    needs: build_extension
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Create Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create 1.0${{ GITHUB.RUN_NUMBER }} artifact/*.zip --target ${{ GITHUB.SHA }} -t 1.0${{ GITHUB.RUN_NUMBER }}
 
