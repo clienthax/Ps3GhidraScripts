@@ -4,36 +4,48 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build_extension:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
+      fail-fast: false
       matrix:
-        ghidra: ['10.0.4', '10.1.1', '10.1.2']
-
+        ghidra: [latest, 10.1.2, 10.1.1, 10.1]
     steps:
+      - name: Set Ghidra version
+        id: ghidra_version
+        run: |
+          if [ ${{ matrix.ghidra }} = latest ]; then
+            ghidra_version=$(curl -fLsSo /dev/null -w %{url_effective} https://github.com/NationalSecurityAgency/ghidra/releases/latest |
+             grep -oP '(?<=https://github.com/NationalSecurityAgency/ghidra/releases/tag/Ghidra_).+(?=_build)')
+            echo "::set-output name=full::$ghidra_version"
+          else
+            echo "::set-output name=full::${{ matrix.ghidra }}"
+          fi
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Get short SHA
-        run: echo "SHORT_SHA=${GITHUB_SHA:0:7}" >> $GITHUB_ENV
-
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
           java-version: 11
           distribution: temurin
-
       - name: Setup Ghidra
         uses: er28-0652/setup-ghidra@master
         with:
-          version: ${{ matrix.ghidra }}
-
+          version: ${{ steps.ghidra_version.outputs.full }}
       - name: Build Extension
         run: gradle
-
+      - name: Prepare artifact
+        id: artifact
+        working-directory: dist
+        run: |
+          ghidra_zip=$(basename ghidra*.zip)
+          7z x "$ghidra_zip" -o../artifacts
+          echo "::set-output name=name::${ghidra_zip//.zip}"
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          path: dist/
+          name: ${{ steps.artifact.outputs.name }}
+          path: artifacts
+          if-no-files-found: error
           retention-days: 7
 
   push_release:
@@ -45,12 +57,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
       - name: Download artifacts
         uses: actions/download-artifact@v3
-
       - name: Create Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release create 1.0${{ GITHUB.RUN_NUMBER }} artifact/*.zip --target ${{ GITHUB.SHA }} -t 1.0${{ GITHUB.RUN_NUMBER }}
-
