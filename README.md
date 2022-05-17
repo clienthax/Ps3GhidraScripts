@@ -1,6 +1,5 @@
 
 # Ps3GhidraScripts
-
 A collection of scripts for parsing PS3 executables with Ghidra.
 
 Relocations are not currently supported.
@@ -24,20 +23,20 @@ To avoid issues with decompilation the following change is needed in Processors\
 Add `<register name="r2"/>` to the `<unaffected>` list
 
 ## Possible problems
-Some cell specific instructions are currently not supported in ghidra, these are the vector store/get lvlx etc, these appear in games and may break decompilation currently.
+Some cell specific instructions are currently not supported in Ghidra, these are the vector store/get lvlx etc, these appear in games and may break decompilation currently.
 
 ## AnalyzePs3Binary.java
 The main script, this should be used BEFORE analysis is run on the program.
 
 This will ask for the location of the nids.txt file.
 
-It will then parse the infomation sections and define imports/exports and name the ones it can from the nids file, and then set the TOC.
+It will then parse the information sections and define imports/exports and name the ones it can from the nids file, and then set the TOC.
 
-After this you should run the auto analysis tool within ghidra, and then run the syscall define script.
+After this you should run the auto analysis tool within Ghidra, and then run the syscall define script.
 
 ## DefinePs3Syscalls.java
 Does what it says on the tin.
 
-Resolves ps3 syscalls to the correct name and defines functions for them.
+Resolves PS3 syscalls to the correct name and defines functions for them.
 
 Should be ran after AnalyzePs3Binary and auto analysis have completed.
