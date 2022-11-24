@@ -31,6 +31,9 @@ jobs:
         with:
           version: ${{ matrix.ghidra }}
 
+      - name: bodge
+        run: chmod +x gradlew
+
       - name: Build Extension
         run: gradlew
 
