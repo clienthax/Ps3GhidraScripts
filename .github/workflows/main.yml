@@ -12,6 +12,8 @@ jobs:
         include:
           - ghidra: '10.2.2'
             java:   '17'
+          - ghidra: '10.2.3'
+            java:   '17'
 
     steps:
       - name: Checkout
