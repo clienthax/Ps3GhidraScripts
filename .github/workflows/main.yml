@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ghidra: ['10.3']
+        ghidra: ['10.3.2', '10.3']
         java:   ['17']
 
     steps:
@@ -37,8 +37,9 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          path: dist/
+          path: dist
           retention-days: 7
+          if-no-files-found: error
 
   push_release:
     if: |
