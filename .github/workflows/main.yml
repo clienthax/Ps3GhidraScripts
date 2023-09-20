@@ -6,34 +6,28 @@ jobs:
   build_extension:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        ghidra: ['10.3.2', '10.3']
+        ghidra: ['10.3.3', '10.3.2', '10.3']
         java:   ['17']
-
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-
+        uses: actions/checkout@v4
       - name: Get short SHA
-        run: echo "SHORT_SHA=${GITHUB_SHA:0:7}" >> $GITHUB_ENV
-
+        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
           java-version: ${{ matrix.java }}
           distribution: temurin
-
       - name: Setup Ghidra
         uses: er28-0652/setup-ghidra@master
         with:
           version: ${{ matrix.ghidra }}
-
       - name: bodge
         run: chmod +x gradlew
-
       - name: Build Extension
         run: ./gradlew
-
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
@@ -49,13 +43,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-
+        uses: actions/checkout@v4
       - name: Download artifacts
         uses: actions/download-artifact@v3
-
       - name: Create Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release create 1.0${{ GITHUB.RUN_NUMBER }} artifact/*.zip --target ${{ GITHUB.SHA }} -t 1.0${{ GITHUB.RUN_NUMBER }}
-
