@@ -1,14 +1,9 @@
 import ghidra.app.script.GhidraScript;
-import ghidra.framework.Application;
-import ghidra.framework.plugintool.dialog.ExtensionDetails;
-import ghidra.framework.plugintool.dialog.ExtensionUtils;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 
 class FnidUtils {
 
@@ -42,7 +37,7 @@ class FnidUtils {
             file = script.askFile("Locate nids.txt", "Load");
         }
 
-        List<String> list = FileUtils.readLines(file);
+        List<String> list = FileUtils.readLines(file,"ascii");
         for (String s : list) {
             final String[] split = s.split(" ");
             fnids.put(split[0], split[1]);
