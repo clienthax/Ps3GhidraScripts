@@ -1,7 +1,6 @@
 import ghidra.app.script.GhidraScript;
-import ghidra.framework.plugintool.dialog.ExtensionDetails;
-import ghidra.framework.plugintool.dialog.ExtensionException;
-import ghidra.framework.plugintool.dialog.ExtensionUtils;
+import ghidra.framework.project.extensions.ExtensionDetails;
+import ghidra.framework.project.extensions.ExtensionUtils;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.data.ArrayDataType;
 import ghidra.program.model.data.DataType;
@@ -10,7 +9,6 @@ import ghidra.program.model.listing.Data;
 import ghidra.program.model.listing.Program;
 import ghidra.program.model.mem.MemoryBlock;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -160,13 +158,13 @@ class Ps3ElfUtils {
     public static String getExtensionInstallDataPath(String extensionName) {
         final List<ExtensionDetails> ps3GhidraScripts;
         try {
-            ps3GhidraScripts = ExtensionUtils.getInstalledExtensions(false)
+            ps3GhidraScripts = ExtensionUtils.getInstalledExtensions()
                     .stream()
                     .filter(extension -> extension.getName().equals(extensionName))
                     .collect(Collectors.toList());
             final ExtensionDetails extensionDetails = ps3GhidraScripts.get(0);
             return extensionDetails.getInstallPath();
-        } catch (ExtensionException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
