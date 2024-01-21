@@ -1,6 +1,6 @@
 import ghidra.app.script.GhidraScript;
-import ghidra.framework.project.extensions.ExtensionDetails;
-import ghidra.framework.project.extensions.ExtensionUtils;
+import ghidra.util.extensions.ExtensionDetails;
+import ghidra.util.extensions.ExtensionUtils;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.data.ArrayDataType;
 import ghidra.program.model.data.DataType;
