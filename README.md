@@ -8,6 +8,7 @@ When loading a prx/elf into Ghidra be sure to select the following language (By 
 ```
 PowerISA-Altivec-64-32addr
 ```
+Make sure to select the BIG endian, otherwise the scripts will throw an error upon running them.
 
 ## Installation
 
