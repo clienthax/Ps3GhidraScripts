@@ -1,3 +1,20 @@
+/* ###
+ * IP: GHIDRA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+//DO NOT RUN: Parses PS3 ELF files and provides utility functions for working with them
+//@category Utilities
 import ghidra.app.script.GhidraScript;
 import ghidra.util.extensions.ExtensionDetails;
 import ghidra.util.extensions.ExtensionUtils;
@@ -15,7 +32,7 @@ import java.util.stream.Collectors;
 
 import static ghidra.app.util.bin.format.elf.ElfConstants.ET_EXEC;
 
-class Ps3ElfUtils {
+public class Ps3ElfUtils extends GhidraScript {
 
     private final static short ET_SCE_PPURELEXEC = (short) 0xffa4;
 
@@ -28,6 +45,19 @@ class Ps3ElfUtils {
     private final MemoryBlock elfHeader;
     private final short programType;
     private final List<ElfSection> sections;
+
+    @Override
+    protected void run() throws Exception {
+        printf("This file is not meant to be run manually. It is used by other scripts.\n");
+    }
+
+    public Ps3ElfUtils() {
+        this.script = null;
+        this.program = null;
+        this.elfHeader = null;
+        this.programType = -1;
+        this.sections = new ArrayList<>();
+    }
 
 
     public Ps3ElfUtils(GhidraScript runningScript, Program program) throws Exception {

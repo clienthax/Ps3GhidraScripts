@@ -1,3 +1,20 @@
+/* ###
+ * IP: GHIDRA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+//Parses the PS3 binary and defines imports, exports, and functions
+//@category Analysis
 import ghidra.app.script.GhidraScript;
 import ghidra.framework.plugintool.Plugin;
 import ghidra.framework.plugintool.PluginTool;
@@ -18,14 +35,14 @@ import java.util.Collections;
 @SuppressWarnings("unused")
 public class AnalyzePs3Binary extends GhidraScript {
 
-    private Ps3ElfUtils utils = null;
+    private Ps3ElfUtils utils;
 
+    @Override
     protected void run() throws Exception {
+        utils = new Ps3ElfUtils(this, currentProgram);
+
         // Create Ps3 data structure types
         Ps3DataStructureTypes.createStructureTypes();
-
-        // Initialise utils
-        utils = new Ps3ElfUtils(this, currentProgram);
 
         // Process program
         process();
