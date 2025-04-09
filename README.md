@@ -38,4 +38,4 @@ Does what it says on the tin.
 
 Resolves PS3 syscalls to the correct name and defines functions for them.
 
-Should be ran after AnalyzePs3Binary and auto analysis have completed.
+Should be run after AnalyzePs3Binary and auto analysis have completed.

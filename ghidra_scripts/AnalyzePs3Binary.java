@@ -320,7 +320,7 @@ public class AnalyzePs3Binary extends GhidraScript {
     //ELFs generally have one section entirely of imports
     private void createImportStubsFromMemoryBlock(MemoryBlock block) throws Exception {
         final long stub_count = block.getSize() / Ps3DataStructureTypes.sceLibStubPpu32DataType.getLength();
-        println("Entries = "+stub_count+" size="+block.getSize()+" struc_size="+Ps3DataStructureTypes.sceLibStubPpu32DataType.getLength());
+        println("Entries = "+stub_count+" size="+block.getSize()+" struct_size="+Ps3DataStructureTypes.sceLibStubPpu32DataType.getLength());
         if(stub_count == 0) {
             println("No imports");
             return;
@@ -337,7 +337,7 @@ public class AnalyzePs3Binary extends GhidraScript {
         final long stub_size = stub_end - stub_top;
         final long stub_count = stub_size / Ps3DataStructureTypes.sceLibStubPpu32DataType.getLength();
 
-        println("Entries = "+stub_count+" size="+stub_size+" struc_size="+Ps3DataStructureTypes.sceLibStubPpu32DataType.getLength());
+        println("Entries = "+stub_count+" size="+stub_size+" struct_size="+Ps3DataStructureTypes.sceLibStubPpu32DataType.getLength());
 
         if(stub_count == 0) {
             //Can happen, eg libL10n
@@ -354,7 +354,7 @@ public class AnalyzePs3Binary extends GhidraScript {
         final long stub_end = sys_process_prx_info_t.getComponent(7).getInt(0);
         final long stub_size = stub_end - stub_top;
         final long stub_count = stub_size / Ps3DataStructureTypes.sceLibStubPpu32DataType.getLength();
-        println("Entries = "+stub_count+" size="+stub_size+" struc_size="+Ps3DataStructureTypes.sceLibStubPpu32DataType.getLength());
+        println("Entries = "+stub_count+" size="+stub_size+" struct_size="+Ps3DataStructureTypes.sceLibStubPpu32DataType.getLength());
         if(stub_count == 0) {
             println("No imports");
             return;
@@ -482,7 +482,7 @@ public class AnalyzePs3Binary extends GhidraScript {
                     final String fnid_name = FnidUtils.getNameForFnid(this, libname, fnid);
 
                     // Create nid label
-                    createLabel(nidArray.getComponent(j).getAddress(), "VNID_"+fnid_name, true);
+                    createLabel(nidArray.getComponent(j).getAddress(), "FNID_"+fnid_name, true);
 
                     // Create var label
                     final Address varAddress = currentAddress.getNewAddress(funcAddrArray.getComponent(j).getInt(0));
@@ -505,7 +505,7 @@ public class AnalyzePs3Binary extends GhidraScript {
 
     private void createExportEntsFromMemoryBlock(MemoryBlock block) throws Exception {
         final long ent_count = block.getSize() / Ps3DataStructureTypes.sceLibEntPpu32DataType.getLength();
-        println("Entries = "+ent_count+" size="+block.getSize()+" struc_size="+Ps3DataStructureTypes.sceLibEntPpu32DataType.getLength());
+        println("Entries = "+ent_count+" size="+block.getSize()+" struct_size="+Ps3DataStructureTypes.sceLibEntPpu32DataType.getLength());
         if(ent_count == 0) {
             println("No exports");
             return;
@@ -521,7 +521,7 @@ public class AnalyzePs3Binary extends GhidraScript {
         final long ent_size = ent_end - ent_top;
         final long ent_count = ent_size / Ps3DataStructureTypes.sceLibEntPpu32DataType.getLength();
 
-        println("Entries = "+ent_count+" size="+ent_size+" struc_size="+Ps3DataStructureTypes.sceLibEntPpu32DataType.getLength());
+        println("Entries = "+ent_count+" size="+ent_size+" struct_size="+Ps3DataStructureTypes.sceLibEntPpu32DataType.getLength());
 
         createExportEnts(currentAddress.getNewAddress(ent_top), (int) ent_count);
     }
@@ -532,7 +532,7 @@ public class AnalyzePs3Binary extends GhidraScript {
         final long ent_end = sys_process_prx_info_t.getComponent(5).getInt(0);
         final long ent_size = ent_end - ent_top;
         final long ent_count = ent_size / Ps3DataStructureTypes.sceLibEntPpu32DataType.getLength();
-        println("Entries = "+ent_count+" size="+ent_size+" struc_size="+Ps3DataStructureTypes.sceLibEntPpu32DataType.getLength());
+        println("Entries = "+ent_count+" size="+ent_size+" struct_size="+Ps3DataStructureTypes.sceLibEntPpu32DataType.getLength());
         if(ent_count == 0) {
             println("No exports");
             return;
