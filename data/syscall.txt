@@ -13,7 +13,7 @@
 13 sys_process_get_id
 14 sys_process_is_spu_lock_line_reservation_address
 15 sys_process_create
-#non existant
+#nonexistent
 16 syscall_16
 17 sys_process_create_primary_ppu_thread
 18 sys_process_getppid
@@ -30,7 +30,7 @@
 29 sys_process_get_id2
 30 _sys_process_get_paramsfo
 31 sys_process_get_ppu_guid
-#Non existant
+#nonexistent
 32 syscall_32
 33 syscall_33
 34 syscall_34
@@ -60,7 +60,7 @@
 56 sys_ppu_thread_rename
 57 sys_ppu_thread_recover_page_fault
 58 sys_ppu_thread_get_page_fault_context
-#non existant
+#nonexistent
 59 syscall_59
 60 sys_trace_create
 61 sys_trace_start
@@ -81,7 +81,7 @@
 76 sys_timer_disconnect_event_queue
 77 sys_trace_create2_in_cbepm
 78 sys_trace_78
-#non existant
+#nonexistent
 79 syscall_79
 80 sys_interrupt_tag_create
 81 sys_interrupt_tag_destroy
@@ -152,7 +152,7 @@
 146 sys_time_get_system_time
 147 sys_time_get_timebase_frequency
 148 _sys_rwlock_trywlock
-#non existant
+#nonexistent
 149 syscall_149
 150 sys_raw_spu_create_interrupt_tag
 151 sys_raw_spu_set_int_mask
@@ -166,15 +166,15 @@
 159 _sys_spu_image_get_segments
 160 sys_raw_spu_create
 161 sys_raw_spu_destroy
-#non existant
+#nonexistent
 162 syscall_162
 163 sys_raw_spu_read_puint_mb
-#non existant
+#nonexistent
 164 syscall_164
 165 sys_spu_thread_get_exit_status
 166 sys_spu_thread_set_argument
 167 sys_spu_thread_group_start_on_exit
-#non existant
+#nonexistent
 168 syscall_168
 169 sys_spu_initialize
 170 sys_spu_thread_group_create
@@ -202,7 +202,7 @@
 192 sys_spu_thread_disconnect_event
 193 sys_spu_thread_bind_queue
 194 sys_spu_thread_unbind_queue
-#non existant
+#nonexistent
 195 syscall_195
 196 sys_raw_spu_set_spu_cfg
 197 sys_raw_spu_get_spu_cfg
@@ -212,7 +212,7 @@
 201 console_getc
 202 event_create_port
 203 event_send_locally
-#non existant
+#nonexistent
 204 syscall_204
 205 syscall_205
 206 syscall_206
@@ -229,7 +229,7 @@
 217 logical_console_getc
 218 logical_console_putc
 219 logical_console_flush
-#non existant
+#nonexistent
 220 syscall_220
 221 syscall_221
 222 syscall_222
@@ -237,7 +237,7 @@
 224 syscall_224
 225 syscall_225
 226 get_logical_partition_id
-#non existant
+#nonexistent
 227 syscall_227
 228 syscall_228
 229 syscall_229
@@ -252,7 +252,7 @@
 238 sys_isolated_spu_set_spu_cfg
 239 sys_isolated_spu_get_spu_cfg
 240 sys_isolated_spu_read_puint_mb
-#non existant
+#nonexistent
 241 syscall_241
 242 syscall_242
 243 syscall_243
@@ -267,14 +267,14 @@
 252 sys_spu_thread_group_disconnect_event_all_threads
 253 sys_spu_thread_group_syscall_253
 254 sys_spu_thread_group_log
-#non existant
+#nonexistent
 255 syscall_255
 256 syscall_256
 257 syscall_257
 258 syscall_258
 259 syscall_259
 260 sys_spu_image_open_by_fd
-#non existant
+#nonexistent
 261 syscall_261
 262 syscall_262
 263 syscall_263
@@ -330,7 +330,7 @@
 313 sys_vm_memory_map_different
 314 syscall_314
 315 syscall_315
-#non existant
+#nonexistent
 316 syscall_316
 317 syscall_317
 318 syscall_318
@@ -380,14 +380,14 @@
 362 sys_mmapper_allocate_shared_memory_from_container
 363 syscall_363
 364 syscall_364
-#non existant
+#nonexistent
 365 syscall_365
 366 syscall_366
 367 sys_uart_initialize
 368 sys_uart_receive
 369 sys_uart_send
 370 sys_uart_get_params
-#non existant
+#nonexistent
 371 syscall_371
 372 sys_game_watchdog_start
 373 sys_game_watchdog_stop

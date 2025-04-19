@@ -121,7 +121,7 @@ public class DefinePS3Syscalls extends GhidraScript {
         //get all of the functions that contain system calls
         //note that this will not find system call instructions that are not in defined functions
         Map<Function, Set<Address>> funcsToCalls = getSyscallsInFunctions(currentProgram, monitor);
-        printf("FGound %d syscalls callers\n", funcsToCalls.size());
+        printf("Found %d syscalls callers\n", funcsToCalls.size());
 
         if (funcsToCalls.isEmpty()) {
             printf("No system calls found (within defined functions)\n");
