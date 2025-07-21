@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ghidra: ['11.2', '11.2.1', '11.3', '11.3.1', '11.3.2']
+        ghidra: ['11.2', '11.2.1', '11.3', '11.3.1', '11.3.2', '11.4']
         java:   ['21']
 
     steps:
