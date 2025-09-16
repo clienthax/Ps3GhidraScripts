@@ -7,8 +7,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ghidra: ['11.2', '11.2.1', '11.3', '11.3.1', '11.3.2', '11.4']
+        ghidra: ['11.2', '11.2.1', '11.3', '11.3.1', '11.3.2', '11.4', '11.4.1', '11.4.2']
         java:   ['21']
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout
