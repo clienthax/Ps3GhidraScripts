@@ -148,10 +148,18 @@ class Ps3ElfUtils {
     }
 
     public void applyDataForce(DataType data, String name, Address address) throws Exception {
-        script.clearListing(address, address.add((data.getLength())-1));
+        script.clearListing(address, address.add(Math.max(0, data.getLength()-1)));
         script.createData(address, data);
         if (!name.isEmpty()) {
             script.createLabel(address, name, true);
+        }
+    }
+
+    public void createDataSafe(DataType data, Address address) {
+        try {
+            script.createData(address, data);
+        } catch (Exception e) {
+            script.println("Warning: Could not create data at " + address + ": " + e.getMessage());
         }
     }
 

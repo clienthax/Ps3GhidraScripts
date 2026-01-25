@@ -69,10 +69,10 @@ public class AnalyzePs3Binary extends GhidraScript {
         final Address firstTocBaseAddr = opdAddress.add(4);
 
         utils.applyDataForce(Pointer32DataType.dataType, "tocPtr", opdAddress);
-        createData(firstTocBaseAddr, Pointer32DataType.dataType);
+        utils.createDataSafe(Pointer32DataType.dataType, firstTocBaseAddr);
 
         final Address elfEntryPtrAddr = currentAddress.getNewAddress(elfEntryPtr);
-        createData(elfEntryPtrAddr, Pointer32DataType.dataType);
+        utils.createDataSafe(Pointer32DataType.dataType, elfEntryPtrAddr);
 
         final Address elfEntry = (Address) getDataAt(elfEntryPtrAddr).getValue();
         addFunction(elfEntry, "_start");
@@ -397,8 +397,8 @@ public class AnalyzePs3Binary extends GhidraScript {
             String libname = "NONAME";
             if(namePtr != 0) {
                 final Address namePtr_ = currentAddress.getNewAddress(namePtr);
-                removeDataAt(namePtr_);// TODO check for string
-                createData(namePtr_, StringDataType.dataType);
+                // TODO: check for string
+                utils.applyDataForce(StringDataType.dataType, "", namePtr_);
                 libname = (String) getDataAt(namePtr_).getValue();
             }
             printf("Import:");
@@ -572,9 +572,9 @@ public class AnalyzePs3Binary extends GhidraScript {
             String libname = "NONAME";
             if(namePtr != 0) {
                 final Address namePtr_ = currentAddress.getNewAddress(namePtr);
-                removeDataAt(namePtr_);//TODO check for string
-                createData(namePtr_, StringDataType.dataType);
-                libname = (String) getDataAt(namePtr_).getValue();//
+                // TODO: check for string
+                utils.applyDataForce(StringDataType.dataType, "", namePtr_);
+                libname = (String) getDataAt(namePtr_).getValue();
             }
             printf("Export:");
             printf("Library name: %s\n", libname);
@@ -627,7 +627,7 @@ public class AnalyzePs3Binary extends GhidraScript {
                     final Address ptrptr = currentAddress.getNewAddress(addrArray.getComponent(j).getInt(0));
                     if(getDataAt(ptrptr) == null) {
                         //Mark as pointer if not already
-                        createData(ptrptr, Pointer32DataType.dataType);
+                        utils.createDataSafe(Pointer32DataType.dataType, ptrptr);
                     }
                     final Address funcAddress = currentAddress.getNewAddress(getDataAt(ptrptr).getInt(0));
                     final Function functionAt = getFunctionAt(funcAddress);
