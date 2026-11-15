@@ -33,8 +33,8 @@ class FnidUtils {
 
     private static void loadFnids(GhidraScript script) throws Exception {
         fnids = new HashMap<>();
-        File file = new File(Ps3ElfUtils.getExtensionInstallDataPath("Ps3GhidraScripts"), "data/"+NIDS_PATH);
-        if (!file.exists()) {
+        File file = Ps3ElfUtils.findDataFile(script, NIDS_PATH);
+        if (file == null) {
             file = script.askFile("Locate nids.txt", "Load");
         }
 

@@ -207,8 +207,8 @@ public class DefinePS3Syscalls extends GhidraScript {
     // TODO: better error checking!
     private Map<Long, String> getSyscallNumberMap() {
         Map<Long, String> syscallMap = new HashMap<>();
-        File file = new File(Ps3ElfUtils.getExtensionInstallDataPath("Ps3GhidraScripts"), "data/syscall.txt");
-        if (!file.exists()) {
+        File file = Ps3ElfUtils.findDataFile(this, "syscall.txt");
+        if (file == null) {
             try {
                 file = askFile("Locate syscall.txt", "Accept");
             } catch (Exception e) {
