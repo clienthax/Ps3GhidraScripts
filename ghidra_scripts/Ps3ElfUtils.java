@@ -1,3 +1,4 @@
+import generic.jar.ResourceFile;
 import ghidra.app.script.GhidraScript;
 import ghidra.util.extensions.ExtensionDetails;
 import ghidra.util.extensions.ExtensionUtils;
@@ -9,9 +10,9 @@ import ghidra.program.model.listing.Data;
 import ghidra.program.model.listing.Program;
 import ghidra.program.model.mem.MemoryBlock;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static ghidra.app.util.bin.format.elf.ElfConstants.ET_EXEC;
 
@@ -164,19 +165,38 @@ class Ps3ElfUtils {
     }
 
     public static String getExtensionInstallDataPath(String extensionName) {
-        final List<ExtensionDetails> ps3GhidraScripts;
         try {
-            ps3GhidraScripts = ExtensionUtils.getInstalledExtensions()
-                    .stream()
-                    .filter(extension -> extension.getName().equals(extensionName))
-                    .collect(Collectors.toList());
-            final ExtensionDetails extensionDetails = ps3GhidraScripts.get(0);
-            return extensionDetails.getInstallPath();
+            for (ExtensionDetails extension : ExtensionUtils.getInstalledExtensions()) {
+                if (extension.getName().equals(extensionName)) {
+                    return extension.getInstallPath();
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         return "";
+    }
+
+    // Finds a file in the data dir of the installed extension, or next to the scripts dir when run from a checkout. Null if neither has it.
+    public static File findDataFile(GhidraScript script, String fileName) {
+        final String installPath = getExtensionInstallDataPath("Ps3GhidraScripts");
+        if (!installPath.isEmpty()) {
+            final File file = new File(installPath, "data/" + fileName);
+            if (file.exists()) {
+                return file;
+            }
+        }
+
+        final ResourceFile scriptsDir = script.getSourceFile() != null ? script.getSourceFile().getParentFile() : null;
+        if (scriptsDir != null && scriptsDir.getParentFile() != null) {
+            final File file = new File(scriptsDir.getParentFile().getAbsolutePath(), "data/" + fileName);
+            if (file.exists()) {
+                return file;
+            }
+        }
+
+        return null;
     }
 
 }
