@@ -42,3 +42,13 @@ Resolves PS3 syscalls to the correct name and defines functions for them.
 
 Should be run after AnalyzePs3Binary and auto analysis have completed.
 
+## Headless mode
+Ghidra's headless mode takes the language ID and compiler spec separately, so for a big endian PS3 ELF import with:
+```
+analyzeHeadless <projectDir> <project> -import <elf> -processor PowerPC:BE:64:A2ALT-32addr -cspec default -noanalysis -postScript AnalyzePs3Binary.java
+```
+Then run the analysis and the remaining scripts on the imported program. Headless mode has no command line switch for turning off a single analyzer, so `Ps3DisableNoReturnDiscovery.java` is run as a pre-script to disable "Non-Returning Functions - Discovered" (see the note under AnalyzePs3Binary.java):
+```
+analyzeHeadless <projectDir> <project> -process <program> -preScript Ps3DisableNoReturnDiscovery.java -postScript DefinePS3Syscalls.java
+```
+The scripts find `nids.txt` and `syscall.txt` in the installed extension, or in the `data` directory next to the scripts directory.
