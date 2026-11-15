@@ -33,9 +33,12 @@ It will then parse the information sections and define imports/exports and name 
 
 After this you should run the auto analysis tool within Ghidra, and then run the syscall define script.
 
+When running auto analysis, untick the "Non-Returning Functions - Discovered" analyzer. On gcc built PS3 code it marks functions like `operator new`, getters and math helpers as non-returning, which cuts the flow after every call to them and truncates the decompiled callers.
+
 ## DefinePs3Syscalls.java
 Does what it says on the tin.
 
 Resolves PS3 syscalls to the correct name and defines functions for them.
 
 Should be run after AnalyzePs3Binary and auto analysis have completed.
+
